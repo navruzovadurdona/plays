@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Игра Змейка</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #f0f0f0;
+      text-align: center;
+      margin-top: 30px;
+    }
+    h1 {
+      color: #2c3e50;
+    }
+    canvas {
+      background: #fff;
+      border: 2px solid #2c3e50;
+    }
+    #score {
+      font-size: 24px;
+      margin: 10px;
+      color: #27ae60;
+    }
+  </style>
+</head>
+<body>
+  <h1>🐍 Игра Змейка</h1>
+  <div id="score">Очки: 0</div>
+  <canvas id="game" width="400" height="400"></canvas>
+
+  <script>
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
+    const box = 20;
+    const rows = canvas.width / box;
+    const cols = canvas.height / box;
+
+    let snake = [{ x: 9 * box, y: 9 * box }];
+    let direction = "";
+    let food = {
+      x: Math.floor(Math.random() * rows) * box,
+      y: Math.floor(Math.random() * cols) * box
+    };
+    let score = 0;
+
+    document.addEventListener("keydown", e => {
+      if (e.key === "ArrowUp" && direction !== "DOWN") direction = "UP";
+      else if (e.key === "ArrowDown" && direction !== "UP") direction = "DOWN";
+      else if (e.key === "ArrowLeft" && direction !== "RIGHT") direction = "LEFT";
+      else if (e.key === "ArrowRight" && direction !== "LEFT") direction = "RIGHT";
+    });
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Змейка
+      for (let i = 0; i < snake.length; i++) {
+        ctx.fillStyle = i === 0 ? "#27ae60" : "#2ecc71";
+        ctx.fillRect(snake[i].x, snake[i].y, box, box);
+      }
+
+      // Еда
+      ctx.fillStyle = "red";
+      ctx.fillRect(food.x, food.y, box, box);
+
+      // Движение
+      let head = { x: snake[0].x, y: snake[0].y };
+      if (direction === "UP") head.y -= box;
+      else if (direction === "DOWN") head.y += box;
+      else if (direction === "LEFT") head.x -= box;
+      else if (direction === "RIGHT") head.x += box;
+
+      // Столкновение со стеной или собой
+      if (
+        head.x < 0 || head.x >= canvas.width ||
+        head.y < 0 || head.y >= canvas.height ||
+        snake.some(seg => seg.x === head.x && seg.y === head.y)
+      ) {
+        clearInterval(game);
+        alert("💀 Игра окончена! Очки: " + score);
+        return;
+      }
+
+      // Съедание еды
+      if (head.x === food.x && head.y === food.y) {
+        score++;
+        document.getElementById("score").textContent = "Очки: " + score;
+        food = {
+          x: Math.floor(Math.random() * rows) * box,
+          y: Math.floor(Math.random() * cols) * box
+        };
+      } else {
+        snake.pop(); // Удаляем хвост
+      }
+
+      snake.unshift(head);
+    }
+
+    const game = setInterval(draw, 150);
+  </script>
+</body>
+</html>
