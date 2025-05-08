@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Гонки: Выбор машины</title>
+  <style>
+    body {
+      margin: 0;
+      background: #2c3e50;
+      overflow: hidden;
+      font-family: sans-serif;
+    }
+
+    #gameArea {
+      position: relative;
+      width: 400px;
+      height: 600px;
+      margin: 0 auto;
+      background: #95a5a6;
+      border: 5px solid #34495e;
+      overflow: hidden;
+    }
+
+    .car {
+      width: 50px;
+      height: 100px;
+      position: absolute;
+      bottom: 20px;
+      left: 175px;
+      font-size: 48px;
+      text-align: center;
+      line-height: 100px;
+    }
+
+    .enemy {
+      width: 50px;
+      height: 100px;
+      background: black;
+      position: absolute;
+      top: -120px;
+      border-radius: 10px;
+    }
+
+    .line {
+      width: 10px;
+      height: 40px;
+      background: white;
+      position: absolute;
+      left: 195px;
+    }
+
+    #gameOver {
+      position: absolute;
+      top: 40%;
+      width: 100%;
+      text-align: center;
+      color: white;
+      font-size: 36px;
+      display: none;
+    }
+
+    #score {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      font-size: 20px;
+      color: white;
+      font-weight: bold;
+      background: rgba(0, 0, 0, 0.4);
+      padding: 8px 12px;
+      border-radius: 8px;
+    }
+
+    #carSelection {
+      text-align: center;
+      padding: 40px 0;
+    }
+
+    .car-button {
+      font-size: 48px;
+      margin: 10px;
+      padding: 10px 20px;
+      border: 2px solid #fff;
+      border-radius: 12px;
+      background: #3498db;
+      color: white;
+      cursor: pointer;
+      transition: 0.3s ease;
+    }
+
+    .car-button:hover {
+      background: #2980b9;
+    }
+  </style>
+</head>
+<body>
+
+<div id="carSelection">
+  <h2 style="color:white;">Выберите свою машину</h2>
+  <button class="car-button">🚗</button>
+  <button class="car-button">🚙</button>
+  <button class="car-button">🚕</button>
+  <button class="car-button">🏎️</button>
+</div>
+
+<div id="gameArea" style="display:none;">
+  <div class="car" id="playerCar"></div>
+  <div id="gameOver">💥 Игра окончена!</div>
+  <div id="score">Очки: 0</div>
+</div>
+
+<script>
+  const gameArea = document.getElementById("gameArea");
+  const playerCar = document.getElementById("playerCar");
+  const gameOverText = document.getElementById("gameOver");
+  const scoreDisplay = document.getElementById("score");
+  const carSelection = document.getElementById("carSelection");
+  const carButtons = document.querySelectorAll(".car-button");
+
+  let selectedEmoji = "🚗";
+  let playerX = 175;
+  let keys = {};
+  let score = 0;
+  let enemies = [];
+  let lines = [];
+  let gameRunning = true;
+
+  document.addEventListener("keydown", e => keys[e.key] = true);
+  document.addEventListener("keyup", e => keys[e.key] = false);
+
+  function createEnemy() {
+    const enemy = document.createElement("div");
+    enemy.classList.add("enemy");
+    enemy.style.left = `${Math.floor(Math.random() * 350)}px`;
+    gameArea.appendChild(enemy);
+    enemies.push(enemy);
+  }
+
+  function createLines() {
+    for (let i = 0; i < 6; i++) {
+      const line = document.createElement("div");
+      line.classList.add("line");
+      line.style.top = `${i * 100}px`;
+      gameArea.appendChild(line);
+      lines.push(line);
+    }
+  }
+
+  function moveLines() {
+    lines.forEach(line => {
+      let top = parseInt(line.style.top);
+      top += 5;
+      if (top > 600) top = -40;
+      line.style.top = `${top}px`;
+    });
+  }
+
+  function moveEnemies() {
+    enemies.forEach((enemy, index) => {
+      let top = parseInt(enemy.style.top);
+      top += 5;
+      enemy.style.top = `${top}px`;
+
+      const rect1 = playerCar.getBoundingClientRect();
+      const rect2 = enemy.getBoundingClientRect();
+      if (
+        rect1.left < rect2.right &&
+        rect1.right > rect2.left &&
+        rect1.top < rect2.bottom &&
+        rect1.bottom > rect2.top
+      ) {
+        endGame();
+      }
+
+      if (top > 600) {
+        enemy.remove();
+        enemies.splice(index, 1);
+      }
+    });
+  }
+
+  function updateScore() {
+    score++;
+    scoreDisplay.textContent = `Очки: ${score}`;
+  }
+
+  function endGame() {
+    gameRunning = false;
+    gameOverText.style.display = "block";
+  }
+
+  function gameLoop() {
+    if (!gameRunning) return;
+
+    if (keys["ArrowLeft"] && playerX > 0) playerX -= 5;
+    if (keys["ArrowRight"] && playerX < 350) playerX += 5;
+    playerCar.style.left = `${playerX}px`;
+
+    moveEnemies();
+    moveLines();
+    updateScore();
+
+    if (Math.random() < 0.02) createEnemy();
+
+    requestAnimationFrame(gameLoop);
+  }
+
+  // Выбор машинки
+  carButtons.forEach(button => {
+    button.addEventListener("click", () => {
+      selectedEmoji = button.textContent;
+      playerCar.textContent = selectedEmoji;
+      carSelection.style.display = "none";
+      gameArea.style.display = "block";
+      createLines();
+      gameLoop();
+    });
+  });
+</script>
+
+</body>
+</html>
+<audio id="crashSound" src="crash.mp3"></audio>
+<audio id="selectSound" src="select.mp3"></audio>
+<audio id="driveSound" src="drive.mp3" loop></audio>
+
+
+  
